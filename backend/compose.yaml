@@ -1,15 +1,39 @@
 services:
   mysql:
     image: 'mysql:8.0'
+    container_name: 'frequency_db'
     environment:
       - 'MYSQL_DATABASE=frequencyusers'
       - 'MYSQL_ROOT_PASSWORD=041t7CXdaA`qYr[sp|'
       - 'MYSQL_ROOT_HOST=%'
     ports:
       - '3307:3306'
+    volumes:
+      - mysql_data:/var/lib/mysql
     networks:
-      - backend
+      - backend-network
+
+  app:
+    build: .
+    container_name: frequency_api
+    depends_on:
+      - mysql
+    ports:
+      - '8081:8080'
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/frequencyusers?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: "041t7CXdaA`qYr[sp|"
+      SPRING_JPA_HIBERNATE_DDL-AUTO: update
+      SPRING_JPA_SHOW-SQL: "true"
+      SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: "true"
+    networks:
+      - backend-network
+
+
+volumes:
+  mysql_data:
 
 networks:
-  backend:
+  backend-network:
     driver: bridge
