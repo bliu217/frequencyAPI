@@ -1,10 +1,15 @@
 services:
   mysql:
-    image: 'mysql:latest'
+    image: 'mysql:8.0'
     environment:
-      - 'MYSQL_DATABASE=mydatabase'
-      - 'MYSQL_PASSWORD=secret'
-      - 'MYSQL_ROOT_PASSWORD=verysecret'
-      - 'MYSQL_USER=myuser'
+      - 'MYSQL_DATABASE=frequencyusers'
+      - 'MYSQL_ROOT_PASSWORD=041t7CXdaA`qYr[sp|'
+      - 'MYSQL_ROOT_HOST=%'
     ports:
-      - '3306'
+      - '3307:3306'
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
