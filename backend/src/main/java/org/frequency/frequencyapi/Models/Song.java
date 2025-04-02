@@ -1,11 +1,20 @@
 package org.frequency.frequencyapi.Models;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Set;
+
 @Getter
 @Setter
+@Entity
 public class Song {
+    @Id
+    private String id;
+
     private String title;
     private String artist;
     private String spotifyId;
@@ -13,6 +22,9 @@ public class Song {
     private String previewUrl;
     private String spotifyUrl;
     private String albumCoverUrl;
+
+    @ManyToMany
+    private Set<Tag> tags;
 
     public Song(String title, String artist, String spotifyId, String album, String previewUrl, String spotifyUrl, String albumCoverUrl) {
         this.title = title;
@@ -24,4 +36,7 @@ public class Song {
         this.albumCoverUrl = albumCoverUrl;
     }
 
+    public Song() {
+
+    }
 }
