@@ -4,12 +4,14 @@ import jakarta.persistence.*;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 public abstract class Post {
 
     @Id
-    protected String id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    protected UUID id;
 
     @OneToMany(mappedBy = "post")
     protected Set<Comment> comments;
@@ -20,7 +22,6 @@ public abstract class Post {
     protected int reposts;
     protected int saves;
 
-    protected Content content;
     protected String authorId;
 
     @ManyToMany
@@ -33,7 +34,6 @@ public abstract class Post {
         this.likeCount = 0;
         this.reposts = 0;
         this.saves = 0;
-        this.content = null;
         this.authorId = authorId;
     }
 

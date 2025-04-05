@@ -3,11 +3,11 @@ services:
     image: 'mysql:8.0'
     container_name: 'frequency_db'
     environment:
-      - 'MYSQL_DATABASE=frequencyusers'
-      - 'MYSQL_ROOT_PASSWORD=041t7CXdaA`qYr[sp|'
-      - 'MYSQL_ROOT_HOST=%'
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_ROOT_HOST=${MYSQL_ROOT_HOST}
     ports:
-      - '3307:3306'
+      - '${MYSQL_PORT}:3306'
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
@@ -21,15 +21,16 @@ services:
     ports:
       - '8081:8080'
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/frequencyusers?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: "041t7CXdaA`qYr[sp|"
-      SPRING_JPA_HIBERNATE_DDL-AUTO: update
-      SPRING_JPA_SHOW-SQL: "true"
-      SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: "true"
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL-AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
+      SPRING_JPA_SHOW-SQL: ${SPRING_JPA_SHOW_SQL}
+      SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: ${SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL}
+      SPRING_DATA_MONGODB_URI: ${SPRING_DATA_MONGODB_URI}
+      SPRING_DATA_MONGODB_DATABASE: ${SPRING_DATA_MONGODB_DATABASE}
     networks:
       - backend-network
-
 
 volumes:
   mysql_data:
