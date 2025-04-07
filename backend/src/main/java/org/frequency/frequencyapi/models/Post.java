@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -20,8 +21,7 @@ public class Post {
     @DBRef
     private Set<Comment> comments = new HashSet<>();
 
-    @DBRef
-    private Set<User> likes = new HashSet<>();
+    private Set<String> likedByUserIds = new HashSet<>();
 
     private int likeCount;
     private int reposts;
@@ -29,10 +29,13 @@ public class Post {
 
     private String authorId;
 
-    @DBRef
-    private Set<Tag> tags = new HashSet<>();
+    private Set<String> tagIds = new HashSet<>();
 
     private String postType;
+    private String singleSongId;
+    private List<String> songIds;
+    private String backgroundImageUrl;
+    private String caption;
 
     public Post(String authorId) {
         this.authorId = authorId;

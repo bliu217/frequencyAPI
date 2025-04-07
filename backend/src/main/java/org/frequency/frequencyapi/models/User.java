@@ -4,6 +4,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Getter
@@ -38,6 +40,12 @@ public class User {
 
     @Column
     private String location;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_saved_songs", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "song_id")
+    private Set<String> savedSongIds = new HashSet<>();
+
 
     public User(String username, String password, String email) {
         this.username = username;
