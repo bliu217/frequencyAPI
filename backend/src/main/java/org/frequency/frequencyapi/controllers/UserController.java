@@ -2,7 +2,7 @@ package org.frequency.frequencyapi.controllers;
 
 import org.frequency.frequencyapi.aws.S3Service;
 import org.frequency.frequencyapi.models.User;
-import org.frequency.frequencyapi.mySQLRepositories.UserRepo;
+import org.frequency.frequencyapi.mySQLRepositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
@@ -16,11 +16,11 @@ import java.util.UUID;
 
 @RestController
 public class UserController {
-    private final UserRepo repository;
+    private final UserRepository repository;
     private final S3Service s3Service;
 
     @Autowired
-    public UserController(UserRepo repository, S3Service s3Service) {
+    public UserController(UserRepository repository, S3Service s3Service) {
         this.repository = repository;
         this.s3Service = s3Service;
     }
