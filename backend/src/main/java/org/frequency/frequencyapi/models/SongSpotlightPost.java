@@ -1,4 +1,4 @@
-package org.frequency.frequencyapi.Models;
+package org.frequency.frequencyapi.models;
 
 public class SongSpotlightPost extends Post{
 

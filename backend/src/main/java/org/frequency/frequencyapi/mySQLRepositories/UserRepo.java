@@ -1,6 +1,6 @@
-package org.frequency.frequencyapi.MySQLRepositories;
+package org.frequency.frequencyapi.mySQLRepositories;
 
-import org.frequency.frequencyapi.Models.User;
+import org.frequency.frequencyapi.models.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.UUID;

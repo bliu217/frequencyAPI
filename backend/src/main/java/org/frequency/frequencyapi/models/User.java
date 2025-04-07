@@ -1,4 +1,4 @@
-package org.frequency.frequencyapi.Models;
+package org.frequency.frequencyapi.models;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -26,6 +26,18 @@ public class User {
     @Column(unique=true)
     @NotNull
     private String email;
+
+    @Column
+    private String profilePictureUrl;
+
+    @Column
+    private String bio;
+
+    @Column
+    private String pronouns;
+
+    @Column
+    private String location;
 
     public User(String username, String password, String email) {
         this.username = username;
