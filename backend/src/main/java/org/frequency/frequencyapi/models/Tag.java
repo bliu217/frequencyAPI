@@ -1,27 +1,27 @@
 package org.frequency.frequencyapi.models;
 
-import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.Set;
-import java.util.UUID;
+import java.util.List;
 
 @Getter
 @Setter
-@Entity
+@CompoundIndex(def = "{'name': 1, 'category': 1}", unique = true)
+@Document(collection = "tags")
 public class Tag {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    private String id;
 
     private String name;
 
-    @ManyToMany
-    private Set<Song> songs;
+    private String category;
 
-    public Tag() {
+    List<String> songIds;
 
-    }
+    public Tag() {}
 }

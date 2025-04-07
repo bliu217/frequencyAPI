@@ -1,43 +1,42 @@
 package org.frequency.frequencyapi.models;
 
-import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
-@Entity
-public abstract class Post {
+@Getter
+@Setter
+@Document(collection = "posts")
+public class Post {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    protected UUID id;
+    private String id;
 
-    @OneToMany(mappedBy = "post")
-    protected Set<Comment> comments;
+    @DBRef
+    private Set<Comment> comments = new HashSet<>();
 
-    @ManyToMany
-    protected Set<User> likes;
-    protected int likeCount;
-    protected int reposts;
-    protected int saves;
+    @DBRef
+    private Set<User> likes = new HashSet<>();
 
-    protected String authorId;
+    private int likeCount;
+    private int reposts;
+    private int saves;
 
-    @ManyToMany
-    protected Set<Tag> tags;
-    public String type;
+    private String authorId;
+
+    @DBRef
+    private Set<Tag> tags = new HashSet<>();
+
+    private String postType;
 
     public Post(String authorId) {
-        this.comments = new HashSet<>();
-        this.likes = new HashSet<>();
-        this.likeCount = 0;
-        this.reposts = 0;
-        this.saves = 0;
         this.authorId = authorId;
     }
 
-    public Post() {
-
-    }
+    public Post() {}
 }

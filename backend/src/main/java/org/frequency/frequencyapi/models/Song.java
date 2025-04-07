@@ -1,19 +1,21 @@
 package org.frequency.frequencyapi.models;
 
-import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
+
 
 @Getter
 @Setter
-@Entity
+@Document(collection = "songs")
 public class Song {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    private String id;
 
     private String title;
     private String artist;
@@ -23,8 +25,7 @@ public class Song {
     private String spotifyUrl;
     private String albumCoverUrl;
 
-    @ManyToMany
-    private Set<Tag> tags;
+    private Map<String, Set<String>> tagsByCategory;
 
     public Song(String title, String artist, String spotifyId, String album, String previewUrl, String spotifyUrl, String albumCoverUrl) {
         this.title = title;
@@ -36,7 +37,5 @@ public class Song {
         this.albumCoverUrl = albumCoverUrl;
     }
 
-    public Song() {
-
-    }
+    public Song() {}
 }

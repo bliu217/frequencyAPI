@@ -1,28 +1,30 @@
 package org.frequency.frequencyapi.models;
 
-import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 
 import java.util.Date;
-import java.util.UUID;
 
 @Getter
 @Setter
-@Entity
+@Document(collection = "comments")
 public class Comment {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    private String id;
 
     private String text;
-    private int likes;
+    private int likes = 0;
 
-    @ManyToOne
+    @DBRef
     private User author;
-    private Date date;
 
-    @ManyToOne
+    private Date date = new Date();
+
+    @DBRef
     private Post post;
 
     public Comment() {}
