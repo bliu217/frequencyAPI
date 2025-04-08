@@ -25,12 +25,4 @@ public class CustomUserDetailsService implements UserDetailsService {
         return new CustomUserDetails(user);
     }
 
-    public static String extractNameFromEmail(String emailString) {
-        int index = emailString.indexOf('@');
-        if (index == -1) {
-            return emailString;
-        }
-        return emailString.substring(0, index);
-    }
-
 }

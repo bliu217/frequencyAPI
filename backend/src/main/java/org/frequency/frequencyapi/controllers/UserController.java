@@ -5,17 +5,17 @@ import org.frequency.frequencyapi.models.Song;
 import org.frequency.frequencyapi.models.User;
 import org.frequency.frequencyapi.mongoDBRepositories.SongRepository;
 import org.frequency.frequencyapi.mySQLRepositories.UserRepository;
+import org.frequency.frequencyapi.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
 
 @RestController
 public class UserController {
@@ -30,38 +30,18 @@ public class UserController {
         this.songRepository = songRepository;
     }
 
-    @GetMapping("/users/{id}")
-    public ResponseEntity<?> getUser(@PathVariable String id) {
-        try {
-            UUID uuid = UUID.fromString(id);
-            Optional<User> userOptional = userRepository.findById(uuid);
-            if (userOptional.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
-            }
-
-            User user = userOptional.get();
-            return ResponseEntity.ok(user);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Invalid UUID format");
-        }
+    @GetMapping("/users/me")
+    public ResponseEntity<?> getUser(@AuthenticationPrincipal CustomUserDetails principal) {
+        return ResponseEntity.ok(principal.getUser());
     }
 
 
-    @PostMapping("/users")
-    public User createUser(@RequestBody User user) {
-        return userRepository.save(user);
-    }
+    @PostMapping("/users/me/profile-picture")
+    public ResponseEntity<?> uploadProfilePicture(@AuthenticationPrincipal CustomUserDetails principal, @RequestParam("file") MultipartFile file) {
 
-    @PostMapping("/users/{id}/profile-picture")
-    public ResponseEntity<?> uploadProfilePicture(@PathVariable String id, @RequestParam("file") MultipartFile file) {
         try {
-            Optional<User> optionalUser = userRepository.findById(UUID.fromString(id));
-            if (optionalUser.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
-            }
-
+            User user = principal.getUser();
             String imageURL = s3Service.uploadFile(file);
-            User user = optionalUser.get();
             user.setProfilePictureUrl(imageURL);
             userRepository.save(user);
             return ResponseEntity.ok(user);
@@ -70,32 +50,31 @@ public class UserController {
         }
     }
 
-    @PatchMapping("/users/{id}")
-    public ResponseEntity<?> updateUserProfile(@PathVariable String id, @RequestBody Map<String, Object> updates) {
+    @PatchMapping("/users/me")
+    public ResponseEntity<?> updateUserProfile(@AuthenticationPrincipal CustomUserDetails principal, @RequestBody Map<String, Object> updates) {
         try {
-            UUID uuid = UUID.fromString(id);
-            Optional<User> userOptional = userRepository.findById(uuid);
+            User user = principal.getUser();
+            updates.forEach((key, value) -> {
+                switch (key) {
+                    case "username":
+                        user.setUsername((String) value);
+                        break;
+                    case "bio":
+                        user.setBio((String) value);
+                        break;
+                    case "email":
+                        user.setEmail((String) value);
+                        break;
+                    case "pronouns":
+                        user.setPronouns((String) value);
+                        break;
+                }
+            });
 
-            if (userOptional.isPresent()) {
-                User user = userOptional.get();
-                updates.forEach((key, value) -> {
-                    switch (key) {
-                        case "username": user.setUsername((String) value); break;
-                        case "bio": user.setBio((String) value); break;
-                        case "email": user.setEmail((String) value); break;
-                        case "pronouns": user.setPronouns((String) value); break;
-                    }
-                });
 
+            User updated = userRepository.save(user);
+            return ResponseEntity.ok(updated);
 
-                User updated = userRepository.save(user);
-                return ResponseEntity.ok(updated);
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
-            }
-
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Invalid UUID format: " + id);
 
         } catch (DataAccessException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -107,18 +86,13 @@ public class UserController {
 
     }
 
-    @DeleteMapping("/users/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable String id) {
+    @DeleteMapping("/users/me")
+    public ResponseEntity<?> deleteUser(@AuthenticationPrincipal CustomUserDetails principal) {
         try {
-            UUID uuid = UUID.fromString(id);
-            if (userRepository.existsById(uuid)) {
-                userRepository.deleteById(uuid);
-                return ResponseEntity.ok().body("User successfully deleted");
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
-            }
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Invalid UUID format: " + id);
+            User user = principal.getUser();
+            userRepository.deleteById(user.getId());
+            return ResponseEntity.ok().body("User successfully deleted");
+
         } catch (DataAccessException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Database error occurred: " + e.getMessage());
@@ -128,44 +102,31 @@ public class UserController {
         }
     }
 
-    @GetMapping("/users/{userId}/saved-songs")
-    public ResponseEntity<?> getSavedSongs(@PathVariable UUID userId) {
-        Optional<User> optionalUser = userRepository.findById(userId);
-        if (optionalUser.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
-        }
+    @GetMapping("/users/me/saved-songs")
+    public ResponseEntity<?> getSavedSongs(@AuthenticationPrincipal CustomUserDetails principal) {
 
-        User user = optionalUser.get();
+        User user = principal.getUser();
         List<Song> savedSongs = songRepository.findAllById(user.getSavedSongIds());
         return ResponseEntity.ok(savedSongs);
     }
 
-    @PatchMapping("/users/{userId}/save-song/{songId}")
-    public ResponseEntity<?> saveSong(@PathVariable UUID userId, @PathVariable String songId) {
-        Optional<User> optionalUser = userRepository.findById(userId);
-        if (optionalUser.isEmpty()) {
-            return ResponseEntity.status(404).body("User not found");
-        }
+    @PatchMapping("/users/me/save-song/{songId}")
+    public ResponseEntity<?> saveSong(@AuthenticationPrincipal CustomUserDetails principal, @PathVariable String songId) {
 
-        User user = optionalUser.get();
+        User user = principal.getUser();
         user.getSavedSongIds().add(songId);
         userRepository.save(user);
         return ResponseEntity.ok("Song saved.");
     }
 
-    @PatchMapping("/users/{userId}/unsave-song/{songId}")
-    public ResponseEntity<?> unsaveSong(@PathVariable UUID userId, @PathVariable String songId) {
-        Optional<User> optionalUser = userRepository.findById(userId);
-        if (optionalUser.isEmpty()) {
-            return ResponseEntity.status(404).body("User not found");
-        }
+    @PatchMapping("/users/me/unsave-song/{songId}")
+    public ResponseEntity<?> unsaveSong(@AuthenticationPrincipal CustomUserDetails principal, @PathVariable String songId) {
 
-        User user = optionalUser.get();
+        User user = principal.getUser();
         user.getSavedSongIds().remove(songId);
         userRepository.save(user);
         return ResponseEntity.ok("Song unsaved.");
     }
-
 
 
 }

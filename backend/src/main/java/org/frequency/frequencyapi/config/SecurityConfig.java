@@ -1,6 +1,5 @@
 package org.frequency.frequencyapi.config;
 
-import org.frequency.frequencyapi.security.CustomUserDetailsService;
 import org.frequency.frequencyapi.security.JWTAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
