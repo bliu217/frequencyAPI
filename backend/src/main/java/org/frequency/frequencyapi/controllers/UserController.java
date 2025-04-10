@@ -1,21 +1,25 @@
 package org.frequency.frequencyapi.controllers;
 
+import jakarta.transaction.Transactional;
 import org.frequency.frequencyapi.aws.S3Service;
 import org.frequency.frequencyapi.models.Song;
 import org.frequency.frequencyapi.models.User;
 import org.frequency.frequencyapi.mongoDBRepositories.SongRepository;
 import org.frequency.frequencyapi.mySQLRepositories.UserRepository;
+import org.frequency.frequencyapi.payloads.UserSummary;
 import org.frequency.frequencyapi.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 public class UserController {
@@ -31,8 +35,24 @@ public class UserController {
     }
 
     @GetMapping("/users/me")
-    public ResponseEntity<?> getUser(@AuthenticationPrincipal CustomUserDetails principal) {
+    public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal CustomUserDetails principal) {
         return ResponseEntity.ok(principal.getUser());
+    }
+
+    @GetMapping("/users/{id}")
+    public ResponseEntity<?> getUserById(@PathVariable String id) {
+        try {
+            Optional<User> user = userRepository.findById(UUID.fromString(id));
+            if (user.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+            }
+
+            return ResponseEntity.ok(user.get());
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid UUID");
+        }
+
     }
 
 
@@ -67,6 +87,9 @@ public class UserController {
                         break;
                     case "pronouns":
                         user.setPronouns((String) value);
+                        break;
+                    default:
+                        System.out.println("Ignored unknown field: " + key);
                         break;
                 }
             });
@@ -126,6 +149,83 @@ public class UserController {
         user.getSavedSongIds().remove(songId);
         userRepository.save(user);
         return ResponseEntity.ok("Song unsaved.");
+    }
+
+
+    @GetMapping("/users/me/followers")
+    public ResponseEntity<?> getFollowers(@AuthenticationPrincipal CustomUserDetails principal, @RequestParam int page, @RequestParam int size) {
+        UUID uuid = principal.getUser().getId();
+        Pageable pageable = PageRequest.of(page, size);
+        Page<User> followersPage = userRepository.findFollowersByUserId(uuid, pageable);
+        Page<UserSummary> results = followersPage.map(u -> new UserSummary(u.getId(), u.getUsername(), u.getBio()));
+
+        return ResponseEntity.ok(results);
+    }
+
+    @GetMapping("/users/me/following")
+    public ResponseEntity<?> getFollowing(@AuthenticationPrincipal CustomUserDetails principal, @RequestParam int page, @RequestParam int size) {
+        UUID uuid = principal.getUser().getId();
+        Pageable pageable = PageRequest.of(page, size);
+        Page<User> followersPage = userRepository.findFollowingsByUserId(uuid, pageable);
+        Page<UserSummary> results = followersPage.map(u -> new UserSummary(u.getId(), u.getUsername(), u.getBio()));
+
+        return ResponseEntity.ok(results);
+    }
+
+    @Transactional
+    @PatchMapping("/users/follow/{id}")
+    public ResponseEntity<?> follow(@AuthenticationPrincipal CustomUserDetails principal, @PathVariable UUID id) {
+        User currentUser = principal.getUser();
+
+        if (currentUser.getId().equals(id)) {
+            return ResponseEntity.badRequest().body("You cannot follow yourself.");
+        }
+
+        Optional<User> userOptional = userRepository.findById(id);
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+
+        User userToFollow = userOptional.get();
+
+        if (currentUser.getFollowings().contains(userToFollow)) {
+            return ResponseEntity.badRequest().body("You already follow this user.");
+        }
+
+        currentUser.follow(userToFollow);
+
+//        userRepository.save(userToFollow); Transactional annotation fixes it, google it
+        userRepository.save(currentUser);
+        return ResponseEntity.ok("User followed.");
+
+    }
+
+    @Transactional
+    @PatchMapping("/users/unfollow/{id}")
+    public ResponseEntity<?> unfollow(@AuthenticationPrincipal CustomUserDetails principal, @PathVariable UUID id) {
+        User currentUser = principal.getUser();
+
+        if (currentUser.getId().equals(id)) {
+            return ResponseEntity.badRequest().body("You cannot unfollow yourself.");
+        }
+
+        Optional<User> userOptional = userRepository.findById(id);
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+
+        User userToUnfollow = userOptional.get();
+
+        if (!currentUser.getFollowings().contains(userToUnfollow)) {
+            return ResponseEntity.badRequest().body("You don't follow this user.");
+        }
+
+        currentUser.unfollow(userToUnfollow);
+
+//        userRepository.save(userToUnfollow); same as the follow method
+        userRepository.save(currentUser);
+        return ResponseEntity.ok("User unfollowed.");
+
     }
 
 
