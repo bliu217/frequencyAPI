@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 
 import java.util.Date;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -19,8 +20,8 @@ public class Comment {
     private String text;
     private int likes = 0;
 
-    @DBRef
-    private User author;
+
+    private UUID authorId;
 
     private Date date = new Date();
 

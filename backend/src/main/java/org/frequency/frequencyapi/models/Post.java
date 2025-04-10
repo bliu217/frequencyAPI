@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -27,7 +28,7 @@ public class Post {
     private int reposts;
     private int saves;
 
-    private String authorId;
+    private UUID authorId;
 
     private Set<String> tagIds = new HashSet<>();
 
@@ -37,7 +38,7 @@ public class Post {
     private String backgroundImageUrl;
     private String caption;
 
-    public Post(String authorId) {
+    public Post(UUID authorId) {
         this.authorId = authorId;
     }
 
