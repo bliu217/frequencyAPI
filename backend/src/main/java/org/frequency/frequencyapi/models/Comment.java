@@ -3,10 +3,11 @@ package org.frequency.frequencyapi.models;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.DBRef;
 
-import java.util.Date;
+
+import java.time.Instant;
 import java.util.UUID;
 
 @Getter
@@ -23,10 +24,13 @@ public class Comment {
 
     private UUID authorId;
 
-    private Date date = new Date();
+    @Indexed(name = "idx_comment_createdAt")
+    private Instant createdAt;
 
-    @DBRef
-    private Post post;
+    @Indexed(name = "idx_post")
+    private String postId;
 
-    public Comment() {}
+    public Comment() {
+        this.createdAt = Instant.now();
+    }
 }

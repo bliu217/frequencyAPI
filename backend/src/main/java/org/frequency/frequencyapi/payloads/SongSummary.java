@@ -1,4 +1,5 @@
 package org.frequency.frequencyapi.payloads;
+import java.time.Instant;
 
-public record SongSummary(String songId, String addedAt) {
+public record SongSummary(String songId, Instant addedAt) {
 }

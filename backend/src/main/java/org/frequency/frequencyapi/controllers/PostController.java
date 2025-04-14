@@ -2,15 +2,18 @@ package org.frequency.frequencyapi.controllers;
 
 import org.frequency.frequencyapi.aws.S3Service;
 import org.frequency.frequencyapi.models.Post;
+import org.frequency.frequencyapi.models.User;
+import org.frequency.frequencyapi.security.CustomUserDetails;
+import org.frequency.frequencyapi.util.PostType;
 import org.frequency.frequencyapi.payloads.PostRequest;
 import org.frequency.frequencyapi.mongoDBRepositories.PostRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -36,21 +39,24 @@ public class PostController {
         }
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deletePost(@PathVariable String id, @RequestParam String authorId) {
-        return postRepository.findById(id).map(post -> {
-            if (!post.getAuthorId().equals(authorId)) {
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<?> deletePost(@AuthenticationPrincipal CustomUserDetails principal, @PathVariable String postId) {
+        User user = principal.getUser();
+        return postRepository.findById(postId).map(post -> {
+            if (!post.getAuthorId().equals(user.getId())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not authorized to delete this post.");
             }
-            postRepository.deleteById(id);
+            postRepository.deleteById(postId);
             return ResponseEntity.ok("Post deleted.");
         }).orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body("Post not found."));
     }
 
-    @PatchMapping("/{id}")
-    public ResponseEntity<?> updatePostCaption(@PathVariable String id, @RequestBody PostRequest request) {
-        return postRepository.findById(id).map(post -> {
-            if (!post.getAuthorId().equals(request.getAuthorId())) {
+    @PatchMapping("/{postId}")
+    public ResponseEntity<?> updatePostCaption(@AuthenticationPrincipal CustomUserDetails principal, @PathVariable String postId, @RequestBody PostRequest request) {
+        User user = principal.getUser();
+
+        return postRepository.findById(postId).map(post -> {
+            if (!post.getAuthorId().equals(user.getId())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not authorized to update this post.");
             }
 
@@ -67,34 +73,31 @@ public class PostController {
 
 
     @PostMapping
-    public ResponseEntity<?> createPost(@ModelAttribute PostRequest request) {
-        String postType = request.getPostType();
+    public ResponseEntity<?> createPost(@AuthenticationPrincipal CustomUserDetails principal, @ModelAttribute PostRequest request) {
+        PostType postType = request.getPostType();
+        User user = principal.getUser();
 
-        if (postType == null || request.getAuthorId() == null) {
-            return ResponseEntity.badRequest().body("Missing postType or authorId");
-        }
-
-        Post post = new Post(request.getAuthorId());
+        Post post = new Post(user.getId());
         post.setPostType(postType);
         post.setTagIds(request.getTagIds());
         post.setCaption(request.getCaption());
 
         switch (postType) {
-            case "HIGHLIGHT":
+            case HIGHLIGHT:
                 if (request.getSingleSongId() == null) {
                     return ResponseEntity.badRequest().body("HIGHLIGHT post must include a singleSongId");
                 }
                 post.setSingleSongId(request.getSingleSongId());
                 break;
 
-            case "CAROUSEL":
+            case CAROUSEL:
                 if (request.getSongIds() == null || request.getSongIds().size() > 10) {
                     return ResponseEntity.badRequest().body("CAROUSEL post must include up to 10 songIds");
                 }
                 post.setSongIds(request.getSongIds());
                 break;
 
-            case "MOODBOARD":
+            case MOODBOARD:
                 if (request.getSongIds() == null || request.getSongIds().size() > 10) {
                     return ResponseEntity.badRequest().body("MOODBOARD post must include up to 10 songIds");
                 }

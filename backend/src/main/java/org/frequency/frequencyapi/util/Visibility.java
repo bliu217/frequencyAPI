@@ -1,9 +1,9 @@
-package org.frequency.frequencyapi.models;
+package org.frequency.frequencyapi.util;
 
 import lombok.Getter;
 
 @Getter
-enum Visibility {
+public enum Visibility {
     PRIVATE("private"),
     PUBLIC("public");
 
