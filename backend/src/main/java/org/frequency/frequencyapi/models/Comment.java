@@ -30,7 +30,10 @@ public class Comment {
     @Indexed(name = "idx_post")
     private String postId;
 
-    public Comment() {
+    public Comment(String postId, String text, UUID authorId) {
         this.createdAt = Instant.now();
+        this.postId = postId;
+        this.text = text;
+        this.authorId = authorId;
     }
 }

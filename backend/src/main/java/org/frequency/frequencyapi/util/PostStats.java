@@ -17,11 +17,20 @@ public class PostStats {
     public void incrementLikes() {
         this.likes++;
     }
-
     public void incrementReposts() {
         this.reposts++;
     }
     public void incrementSaves() {
         this.saves++;
+    }
+
+    public void decrementLikes() {
+        this.likes--;
+    }
+    public void decrementReposts() {
+        this.reposts--;
+    }
+    public void decrementSaves() {
+        this.saves--;
     }
 }

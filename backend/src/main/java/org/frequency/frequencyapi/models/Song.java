@@ -8,8 +8,7 @@ import org.springframework.data.mongodb.core.index.TextIndexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
-import java.util.Map;
-import java.util.Set;
+import java.util.List;
 
 
 @Getter
@@ -36,15 +35,19 @@ public class Song {
     private String spotifyUrl;
     private String albumCoverUrl;
 
+    @Indexed(name = "idx_song_bpm")
+    private int bpm;
+
     @Indexed(name = "idx_song_usageCount")
     private int usageCount;
 
     @Indexed(name = "idx_song_addedAt")
     private Instant addedAt;
 
-    private Map<String, Set<String>> tagsByCategory;
+    @Indexed(name = "idx_song_tags")
+    private List<String> tagIds;
 
-    public Song(String title, String artist, String spotifyId, String album, String previewUrl, String spotifyUrl, String albumCoverUrl) {
+    public Song(String title, String artist, String spotifyId, String album, String previewUrl, String spotifyUrl, String albumCoverUrl, int bpm) {
         this.title = title;
         this.artist = artist;
         this.spotifyId = spotifyId;
@@ -54,6 +57,7 @@ public class Song {
         this.albumCoverUrl = albumCoverUrl;
         this.usageCount = 1;
         this.addedAt = Instant.now();
+        this.bpm = bpm;
     }
 
     public void incrementUsageCount() {
