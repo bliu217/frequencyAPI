@@ -36,4 +36,14 @@ public class Comment {
         this.text = text;
         this.authorId = authorId;
     }
+
+    public void increaseLikes() {
+        likes++;
+    }
+
+    public void decreaseLikes() {
+        if (this.likes > 0) {
+            likes--;
+        }
+    }
 }

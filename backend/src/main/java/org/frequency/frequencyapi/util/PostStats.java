@@ -25,12 +25,19 @@ public class PostStats {
     }
 
     public void decrementLikes() {
-        this.likes--;
+        if (this.likes > 0) {
+            this.likes--;
+
+        }
     }
     public void decrementReposts() {
-        this.reposts--;
+        if (this.reposts > 0) {
+            this.reposts--;
+        }
     }
     public void decrementSaves() {
-        this.saves--;
+        if (this.saves > 0) {
+            this.saves--;
+        }
     }
 }

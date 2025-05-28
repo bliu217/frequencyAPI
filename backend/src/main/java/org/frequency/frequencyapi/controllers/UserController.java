@@ -2,8 +2,10 @@ package org.frequency.frequencyapi.controllers;
 
 import jakarta.transaction.Transactional;
 import org.frequency.frequencyapi.aws.S3Service;
+import org.frequency.frequencyapi.models.Post;
 import org.frequency.frequencyapi.models.Song;
 import org.frequency.frequencyapi.models.User;
+import org.frequency.frequencyapi.mongoDBRepositories.PostRepository;
 import org.frequency.frequencyapi.mongoDBRepositories.SongRepository;
 import org.frequency.frequencyapi.mySQLRepositories.UserRepository;
 import org.frequency.frequencyapi.payloads.UserSummary;
@@ -11,6 +13,7 @@ import org.frequency.frequencyapi.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -26,12 +29,14 @@ public class UserController {
     private final UserRepository userRepository;
     private final S3Service s3Service;
     private final SongRepository songRepository;
+    private final PostRepository postRepository;
 
     @Autowired
-    public UserController(UserRepository repository, S3Service s3Service, SongRepository songRepository) {
+    public UserController(UserRepository repository, S3Service s3Service, SongRepository songRepository, PostRepository postRepository) {
         this.userRepository = repository;
         this.s3Service = s3Service;
         this.songRepository = songRepository;
+        this.postRepository = postRepository;
     }
 
     @GetMapping("/users/me")
@@ -126,11 +131,24 @@ public class UserController {
     }
 
     @GetMapping("/users/me/saved-songs")
-    public ResponseEntity<?> getSavedSongs(@AuthenticationPrincipal CustomUserDetails principal) {
+    public ResponseEntity<?> getSavedSongs(@AuthenticationPrincipal CustomUserDetails principal, @RequestParam int page, @RequestParam int size) {
 
         User user = principal.getUser();
-        List<Song> savedSongs = songRepository.findAllById(user.getSavedSongIds());
-        return ResponseEntity.ok(savedSongs);
+        List<String> savedIds = new ArrayList<>(user.getSavedSongIds());
+
+        int start = page * size;
+        int end = Math.min(start + size, savedIds.size());
+
+
+        if (start >= savedIds.size()) {
+            return ResponseEntity.ok(Page.empty());
+        }
+
+        List<String> pageIds = savedIds.subList(start, end);
+
+        List<Song> savedSongs = songRepository.findAllById(pageIds);
+        Page<Song> resultPage = new PageImpl<>(savedSongs, PageRequest.of(page, size), savedIds.size());
+        return ResponseEntity.ok(resultPage);
     }
 
     @PatchMapping("/users/me/save-song/{songId}")
@@ -170,6 +188,14 @@ public class UserController {
         Page<UserSummary> results = followersPage.map(u -> new UserSummary(u.getId(), u.getUsername(), u.getBio()));
 
         return ResponseEntity.ok(results);
+    }
+
+    @GetMapping("/users/me/saved-posts")
+    public ResponseEntity<?> getSavedPosts(@AuthenticationPrincipal CustomUserDetails principal, @RequestParam int page, @RequestParam int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Post> savedPostsPage = postRepository.findAllByIdIn(principal.getUser().getPostIds(), pageable);
+        return ResponseEntity.ok(savedPostsPage);
     }
 
     @Transactional

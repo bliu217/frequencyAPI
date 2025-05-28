@@ -11,9 +11,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface UserRepository extends JpaRepository<User, UUID> {
-    Optional<Object> findByEmail(String usernameOrEmail);
+    Optional<User> findByEmail(String usernameOrEmail);
 
-    Optional<Object> findByUsername(String usernameOrEmail);
+    Optional<User> findByUsername(String usernameOrEmail);
 
     @Query("select u from User u join u.followings f where f.id = :userId")
     Page<User> findFollowersByUserId(@Param("userId") UUID userId, Pageable pageable);

@@ -56,7 +56,7 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody AuthRequest request) {
 
 
-        Optional<Object> userOption = userRepository.findByEmail(request.getEmail());
+        Optional<User> userOption = userRepository.findByEmail(request.getEmail());
 
         if (userOption.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid email or password.");

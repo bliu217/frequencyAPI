@@ -3,6 +3,7 @@ package org.frequency.frequencyapi.controllers;
 import org.frequency.frequencyapi.aws.S3Service;
 import org.frequency.frequencyapi.models.Post;
 import org.frequency.frequencyapi.models.User;
+import org.frequency.frequencyapi.mySQLRepositories.UserRepository;
 import org.frequency.frequencyapi.security.CustomUserDetails;
 import org.frequency.frequencyapi.util.PostType;
 import org.frequency.frequencyapi.payloads.PostRequest;
@@ -22,11 +23,13 @@ public class PostController {
 
     private final PostRepository postRepository;
     private final S3Service s3Service;
+    private final UserRepository userRepository;
 
     @Autowired
-    public PostController(PostRepository postRepository, S3Service s3Service) {
+    public PostController(PostRepository postRepository, S3Service s3Service, UserRepository userRepository) {
         this.postRepository = postRepository;
         this.s3Service = s3Service;
+        this.userRepository = userRepository;
     }
 
     @GetMapping("/{id}")
@@ -69,6 +72,24 @@ public class PostController {
             }
 
         }).orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body("Post not found."));
+    }
+
+    @PostMapping("/{postId}/save")
+    public ResponseEntity<?> toggleSavePost(@AuthenticationPrincipal CustomUserDetails principal, @PathVariable String postId) {
+        User user = principal.getUser();
+        if (!postRepository.existsById(postId)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Post not found.");
+        }
+
+        if (user.getSavedPostIds().contains(postId)) {
+            user.unsavePost(postId);
+            userRepository.save(user);
+            return ResponseEntity.ok("Post unsaved.");
+        }
+
+        user.savePost(postId);
+        userRepository.save(user);
+        return ResponseEntity.ok("Post saved.");
     }
 
 

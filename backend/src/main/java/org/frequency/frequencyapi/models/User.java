@@ -72,12 +72,17 @@ public class User {
     private Set<User> followings = new HashSet<>();
 
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "user_saved_songs", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "song_id")
     private Set<String> savedSongIds = new HashSet<>();
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "user_saved_posts", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "post_id")
+    private Set<String> savedPostIds = new HashSet<>();
+
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "user_posts", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "post_id")
     private Set<String> postIds = new HashSet<>();
@@ -122,5 +127,13 @@ public class User {
     public void removeFollowing(User user) {
         if (this.followings.remove(user))
             this.followingCount -= 1;
+    }
+
+    public void savePost(String postId) {
+        this.savedPostIds.add(postId);
+    }
+
+    public void unsavePost(String postId) {
+        this.savedPostIds.remove(postId);
     }
 }

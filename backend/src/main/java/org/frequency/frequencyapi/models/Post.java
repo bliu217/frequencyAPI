@@ -57,4 +57,12 @@ public class Post {
         this.createdAt = Instant.now();
         this.stats = new PostStats();
     }
+
+    public void decrementLikesCount() {
+        this.stats.decrementLikes();
+    }
+
+    public void incrementLikesCount() {
+        this.stats.incrementLikes();
+    }
 }
